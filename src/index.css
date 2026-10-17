@@ -1,0 +1,89 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    background-color: #1B1464;
+    background-image: radial-gradient(rgba(255, 255, 255, 0.15) 1.5px, transparent 1.5px),
+                      radial-gradient(rgba(255, 180, 0, 0.1) 1.5px, transparent 1.5px);
+    background-size: 24px 24px;
+    background-position: 0 0, 12px 12px;
+    margin: 0;
+    padding: 0;
+    font-family: 'Poppins', sans-serif;
+    color: #1a1a1a;
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+/* Neo-brutalist custom utilities */
+.brutal-card {
+  @apply bg-cream border-[3px] border-black shadow-brutal rounded-xl;
+}
+
+.brutal-card-lg {
+  @apply bg-cream border-4 border-black shadow-brutal-lg rounded-2xl;
+}
+
+.brutal-btn {
+  @apply border-[3px] border-black shadow-brutal font-bungee active:translate-x-1 active:translate-y-1 active:shadow-none transition-all duration-100 disabled:opacity-50 disabled:cursor-not-allowed select-none;
+}
+
+.brutal-btn-primary {
+  @apply brutal-btn bg-marigold hover:bg-[#ffc229] text-black px-6 py-3 rounded-xl uppercase tracking-wider;
+}
+
+.brutal-btn-accent {
+  @apply brutal-btn bg-magenta hover:bg-[#ff1a9b] text-white px-6 py-3 rounded-xl uppercase tracking-wider;
+}
+
+.brutal-btn-secondary {
+  @apply brutal-btn bg-teal hover:bg-[#00d4c3] text-black px-4 py-2 rounded-lg;
+}
+
+.brutal-btn-saffron {
+  @apply brutal-btn bg-saffron hover:bg-[#ff7e33] text-white px-6 py-3 rounded-xl uppercase tracking-wider;
+}
+
+/* Animations */
+@keyframes jiggle {
+  0%, 100% { transform: rotate(-5deg) translateY(0); }
+  50% { transform: rotate(-7deg) translateY(-2px); }
+}
+
+.animate-jiggle {
+  animation: jiggle 1.4s ease-in-out infinite;
+}
+
+@keyframes mascot-wobble {
+  0%, 100% { transform: rotate(-4deg) scale(1); }
+  50% { transform: rotate(4deg) scale(1.05); }
+}
+
+.animate-mascot {
+  animation: mascot-wobble 1.2s ease-in-out infinite;
+}
+
+@keyframes river-bob {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-5px) rotate(3deg); }
+}
+
+.animate-bob {
+  animation: river-bob 2.5s ease-in-out infinite;
+}
+
+@keyframes shake-screen {
+  0% { transform: translate(0, 0); }
+  15% { transform: translate(-8px, 6px); }
+  30% { transform: translate(8px, -6px); }
+  45% { transform: translate(-6px, -4px); }
+  60% { transform: translate(6px, 4px); }
+  75% { transform: translate(-3px, 2px); }
+  100% { transform: translate(0, 0); }
+}
+
+.animate-shake {
+  animation: shake-screen 0.6s cubic-bezier(.36,.07,.19,.97) both;
+}
