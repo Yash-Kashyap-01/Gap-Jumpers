@@ -149,6 +149,20 @@
   - "Best Roast" highlights the lowest scoring round with score < 50, guaranteed not to duplicate "Top Translation".
   - Both cards display the scenario title and player guess for clear narrative context.
 
+### 8. "JUMPERS" Animated Jumping & Bouncing on Home Page
+- **Visual Design**:
+  - On the Home title banner, the keyword `"JUMPERS"` is highlighted in eye-catching magenta with a hard black neo-brutalist shadow (`drop-shadow-[5px_5px_0px_#000]`).
+- **Dynamic Physics Animation**:
+  - Each individual letter (`J`, `U`, `M`, `P`, `E`, `R`, `S`) animates with a continuous jumping and bouncing wave using Framer Motion spring physics.
+  - Features authentic Disney-style squash-and-stretch:
+    - Vertical jump up to `-26px` with vertical elongation (`scaleY: 1.18`, `scaleX: 0.88`).
+    - Ground impact with horizontal squash (`scaleY: 0.82`, `scaleX: 1.15`).
+    - Secondary micro-bounce (`y: -10px`) before settling.
+    - Alternating rotational tilts (`-6°` / `+6°`).
+  - Staggered timing (`delay: index * 0.08s`) creates a fluid jumping wave across the title.
+- **Hover Interactivity**:
+  - Hovering over individual letters triggers an interactive high jump (`y: -30px`, `scale: 1.25`, rotate: `±12°`) with spring rebound.
+
 ---
 
 ## 🛠️ Tech Stack & Dependencies

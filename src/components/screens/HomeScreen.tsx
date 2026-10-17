@@ -1,4 +1,5 @@
 import React from 'react';
+import { motion } from 'framer-motion';
 import { Play, Settings, Sparkles, Shield, Zap } from 'lucide-react';
 
 interface HomeScreenProps {
@@ -22,10 +23,39 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
 }) => {
   return (
     <div className="flex flex-col items-center justify-center min-h-[85vh] px-4 py-8 max-w-4xl mx-auto text-center">
-      {/* Main Title Banner */}
+      {/* Main Title Banner with Jumping & Bouncing Animation */}
       <div className="relative mb-3">
-        <h1 className="text-4xl sm:text-6xl md:text-7xl font-bungee tracking-wider text-marigold drop-shadow-[5px_5px_0px_#000] -rotate-1 select-none">
-          GAP JUMPERS
+        <h1 className="text-4xl sm:text-6xl md:text-7xl font-bungee tracking-wider text-marigold drop-shadow-[5px_5px_0px_#000] -rotate-1 select-none flex items-center justify-center gap-3 sm:gap-4 flex-wrap">
+          <span>GAP</span>
+          <span className="inline-flex">
+            {'JUMPERS'.split('').map((char, index) => (
+              <motion.span
+                key={index}
+                className="inline-block text-magenta drop-shadow-[5px_5px_0px_#000] cursor-pointer"
+                animate={{
+                  y: [0, -26, 0, -10, 0],
+                  scaleY: [1, 1.18, 0.82, 1.05, 1],
+                  scaleX: [1, 0.88, 1.15, 0.96, 1],
+                  rotate: [0, index % 2 === 0 ? -6 : 6, 0],
+                }}
+                whileHover={{
+                  scale: 1.25,
+                  y: -30,
+                  rotate: index % 2 === 0 ? -12 : 12,
+                  transition: { type: 'spring', stiffness: 400, damping: 10 },
+                }}
+                transition={{
+                  duration: 1.2,
+                  repeat: Infinity,
+                  repeatDelay: 0.35,
+                  delay: index * 0.08,
+                  ease: [0.28, 0.84, 0.42, 1],
+                }}
+              >
+                {char}
+              </motion.span>
+            ))}
+          </span>
         </h1>
         <div className="absolute -top-3 -right-6 text-3xl md:text-4xl animate-bounce">
           🌉
