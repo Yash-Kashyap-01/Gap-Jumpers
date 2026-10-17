@@ -21,10 +21,11 @@
 13. [Drawing Canvas Implementation](#-drawing-canvas-implementation)
 14. [Player B Guessing Timer](#-player-b-guessing-timer)
 15. [Bridge Scene & Animations](#-bridge-scene--animations)
-16. [UI / Design System](#-ui--design-system)
-17. [Content & Data](#-content--data)
-18. [Configuration Files](#-configuration-files)
-19. [Implementation Status](#-implementation-status)
+16. [Full-Page Ocean Background & Ecosystem](#-full-page-ocean-background--ecosystem)
+17. [UI / Design System](#-ui--design-system)
+18. [Content & Data](#-content--data)
+19. [Configuration Files](#-configuration-files)
+20. [Implementation Status](#-implementation-status)
 
 ---
 
@@ -162,6 +163,39 @@
   - Staggered timing (`delay: index * 0.08s`) creates a fluid jumping wave across the title.
 - **Hover Interactivity**:
   - Hovering over individual letters triggers an interactive high jump (`y: -30px`, `scale: 1.25`, rotate: `±12°`) with spring rebound.
+
+### 9. Redesigned Bridge Structure, Dramatic Falling Physics & Victory Crossing
+- **Suspension Architecture**:
+  - Custom SVG quadratic bezier catenary suspension cable spanning between cliffs with braided rope pattern.
+  - 7 vertical rope suspenders connecting the main cable to the bridge deck.
+  - Realistic wooden planks with timber grain striping, corner iron rivets/bolts, and rope wrap lashings (`🧵`).
+  - Distinct visual states:
+    - **Solid Plank**: Golden timber (`#ffd166`), bolted steel frame, and `SOLID` badge.
+    - **Wobbly Plank**: Weathered distressed timber with stress cracks (`⚡`), `WOBBLY` badge, and creaking jiggle animation.
+    - **Collapse**: Plank splits into broken halves tumbling downward in opposite angles with smoke/splinters.
+- **Traveler Character Journey & Dynamic Progression**:
+  - A real animated adventurer character (`🚶‍♂️`) stands on the left cliff edge and steps onto each plank as they are constructed (Plank 1 → Plank 2 → Plank 3).
+- **Tragic Falling Death into Ocean**:
+  - When the bridge collapses or life is lost (`isCollapsing` or `isLost`), the character screams (`😱 AAAAGH!`), loses balance, rotates 360° through the air, and plunges straight into the ocean waters below.
+  - A giant ocean water splash erupts on impact (`💦💥💦🌊`).
+  - A hungry crocodile lunges up from the water with snapping jaws (`🐊 CHOMP!`).
+  - A floating skull and memorial marker (`💀 R.I.P. 🪦`) ascend to the sky, marking the traveler's tragic fate.
+- **Victory Crossing**:
+  - When all 3 planks are successfully placed (`isWon`), the adventurer joyfully runs across the bridge all the way to Player B's cliff (`TYPIST`), celebrates with an energetic dance (`🕺`), "SAFELY CROSSED! 🎉" speech bubble, and a shower of confetti and golden stars.
+
+### 10. Full-Page Animated Ocean Background
+- **Immersion**:
+  - Extends seamlessly across the entire background of the application during all in-game screens (`COVER_A`, `SECRET_CARD`, `DRAW`, `COVER_B`, `INTERPRETING`, `RELAY_GUESS`, `RESULT`, `END`).
+- **Layers & Wildlife**:
+  - Deep ocean vertical gradient (`#0a1945` → `#073b4c` → `#021824`) with animated sunlight caustics.
+  - Multi-layered undulating SVG water waves flowing across the screen.
+  - Swimming fish school across multiple depths: clownfish (`🐠`), blue tuna (`🐟`), pufferfish (`🐡`), and a deep-sea turtle (`🐢`).
+  - Pulsating bioluminescent jellyfish (`🪼`) hovering in mid-water.
+  - Scuttling crabs (`🦀`) patrolling the bottom seabed with realistic side-to-side gait.
+  - Starfish (`⭐`) and swaying kelp/seaweed (`🌿`, `🌾`) along the bottom corners.
+  - Continuously rising air bubbles (`🫧`) floating upward with horizontal drift.
+- **Layering Context**:
+  - Placed at `z-0 pointer-events-none` so all interactive game panels, canvas doodler, timer badges, and typing fields remain sharp and fully clickable at `z-20`.
 
 ---
 
@@ -475,14 +509,64 @@ Zero external audio files — all sounds are procedurally synthesized using the 
 ## 🌉 Bridge Scene & Animations
 
 ### File: `src/components/BridgeScene.tsx`
-- **Environment**: Night sky gradient with star pulses, cliffs for Doodler and Typist, teal river basin with animated bobbing crocodile (🐊) and fish (🐟).
-- **Bridge Slots**: 3 bridge slots showing construction progress.
-- **Plank Animations**:
-  - Solid: Spring bounce animation (stiffness: 350).
-  - Wobbly: Spring animation with continuous CSS `animate-jiggle` (~6° tilt).
-  - Collapse: Cracks with red flash, snap text, and rotates 65° down into splash effect (`💦💥💦`).
-- **Mascot**: 🤖 robot interpreter on the bridge with persona emoji badge.
-- **Cleaned View**: Floating speech text above the robot has been removed to keep the bridge unobstructed.
+- **Suspension Bridge Architecture**:
+  - Twin wooden anchor towers with steel reinforcing bolts, rope coils, and grass tufts on left (Doodler) and right (Typist) cliffs.
+  - Catenary suspension cable: Hand-crafted SVG quadratic bezier curve (`M 10,10 Q 300,85 590,10`) with a double-layered rustic rope texture and dashed tension strand.
+  - 7 vertical rope suspenders connecting the main cable to the bridge deck.
+  - Handrail guide rope spanning at waist height across the gorge.
+- **Plank Engineering**:
+  - **3 Construction Slots**: Flex layout positioning 3 bridge segments spanning the gorge.
+  - **Solid Plank**: Rich golden amber timber (`bg-gradient-to-r from-amber-500 via-[#ffd166] to-amber-500`), twin corner bolt heads, rope wraps (`🧵`), bold `SOLID` badge, and spring drop-in animation (stiffness: 350).
+  - **Wobbly Plank**: Weathered distressed timber (`from-orange-600 via-amber-600 to-orange-700`), stress fracture cracks (`⚡`), `WOBBLY` badge, and continuous CSS `animate-jiggle` (~6° tilt).
+  - **Breaking / Collapsing Plank**: Fractures down the middle into two jagged halves that snap in opposite rotational directions (`-55°` and `+60°`) and tumble down into the abyss.
+- **Traveler Character Journey & Dynamic Progression**:
+  - Animated adventurer (`🚶‍♂️`) standing on the left cliff at start (`13%` position).
+  - Automatically advances forward onto newly constructed planks:
+    - Plank 1: Steps to `37%`
+    - Plank 2: Steps to `51%`
+    - Plank 3: Steps to `65%`
+- **Tragic Falling Death Sequence into Ocean**:
+  - Triggered on round collapse (`isCollapsing`) or game loss (`isLost`).
+  - Character screams with speech bubble (`AAAAGH! 😱`), loses balance, rotates 360°–540° while tumbling down into the ocean basin (`y: +95px`).
+  - A massive 4-stage ocean water splash erupts on impact (`💦💥💦🌊`) with cyan drop shadow.
+  - A lurking crocodile leaps upward with snapping jaws (`🐊 CHOMP!`).
+  - An ascending soul/death marker (`💀 R.I.P. 🪦`) rises out of the water toward the sky.
+- **Victory Crossing Sequence**:
+  - Triggered on game win (`isWon`).
+  - Adventurer joyfully sprints across the final span to Player B's cliff (`87%` position).
+  - Celebrates with an energetic victory dance (`🕺`), bouncy "SAFELY CROSSED! 🎉" speech banner, and continuous shower of confetti (`🎉`, `🎊`) and glowing stars (`✨`, `⭐`).
+- **Mascot**:
+  - Neo-brutalist white robot interpreter (`🤖`) centered below the bridge deck with attached persona badge (`🎭`).
+
+---
+
+## 🌊 Full-Page Ocean Background & Ecosystem
+
+### File: `src/components/OceanBackground.tsx` & `src/index.css`
+- **Immersion Scope**:
+  - Spans the entire viewport background (`inset-0`) across all active in-game screens (`state.screen !== 'HOME'`).
+  - Kept in stacking context `z-0 pointer-events-none` so foreground controls, drawing canvas, and inputs remain completely responsive.
+- **Multi-Layered Ocean Ecosystem**:
+  1. **Deep Abyss Gradient**: Vertical gradient transition from `#0a1945` (sub-surface) through `#073b4c` (mid-ocean) down to `#021824` (seabed trench).
+  2. **Sunlight Caustics**: Subtle pulsating cyan shimmer (`radial-gradient`) simulating underwater light refraction.
+  3. **Flowing Water Waves**: Dual-layer SVG wave curves with continuous oscillating horizontal flow (`animate-wave-flow`, 14s cycle).
+  4. **Swimming Wildlife (Left to Right)**:
+     - Clownfish (`🐠`, upper layer, 16s cycle)
+     - Blue fish (`🐟`, mid layer, 14s cycle)
+     - Pufferfish (`🐡`, lower-mid layer, 18s cycle)
+     - Sea turtle (`🐢`, deep ocean, 28s slow graceful paddle)
+  5. **Reverse Swimming Wildlife (Right to Left)**:
+     - Coral fish (`🐟`, 17s cycle, horizontally flipped via `scaleX(-1)`)
+     - Tropical fish (`🐠`, 22s cycle, horizontally flipped)
+  6. **Mid-Depth Bioluminescent Jellyfish**:
+     - Pulsating jellyfish (`🪼`) bobbing vertically with glowing cyan drop shadows.
+  7. **Seabed Scuttling Crabs**:
+     - Three bottom-dwelling crabs (`🦀`) pacing back and forth with realistic sideways scuttling keyframes (`animate-crab`).
+  8. **Marine Flora**:
+     - Swaying kelp and seaweed fronds (`🌿`, `🌾`) anchored to the bottom corners (`animate-seaweed`, 4s sway).
+     - Colorful starfish (`⭐`) resting along the seabed.
+  9. **Rising Air Bubbles**:
+     - Stream of translucent bubbles (`🫧`) floating upward from the sea floor to the surface with sinusoidal horizontal drift (`bubble-float` keyframes).
 
 ---
 
@@ -570,4 +654,10 @@ Zero external audio files — all sounds are procedurally synthesized using the 
 | Devlympics / Theme Text | ✅ Removed | Completely decoupled from hackathon branding |
 | Floating Robot Speech | ✅ Removed | Cleaner unobstructed bridge visual |
 | Procedural Audio System | ✅ Complete | Web Audio API + SpeechSynthesis |
+| "JUMPERS" Bouncing Title | ✅ Enhanced | Disney-style squash-and-stretch letter animation |
+| Bridge Redesign & Physics | ✅ Implemented | Authentic suspension cables, wood grain, bolts & rope ties |
+| Character Bridge Progression | ✅ Implemented | Adventurer steps from cliff onto each completed plank |
+| Ocean Fall & Death Sequence | ✅ Implemented | 360° tumble, ocean splash, crocodile chomp & R.I.P. ghost |
+| Victory Crossing Celebration | ✅ Implemented | Safe sprint to cliff, celebration dance, speech & confetti |
+| Full-Page Ocean Background | ✅ Implemented | Animated waves, swimming fishes, crabs, bubbles & seaweed |
 | Production Build | ✅ Verified | `npm run build` passes with zero errors |

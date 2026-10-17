@@ -6,6 +6,7 @@ import { generateRelay, generateScore } from './lib/ai';
 // Components
 import { Hud } from './components/Hud';
 import { BridgeScene } from './components/BridgeScene';
+import { OceanBackground } from './components/OceanBackground';
 import { Toast } from './components/Toast';
 import { SettingsModal } from './components/SettingsModal';
 
@@ -196,33 +197,41 @@ export const App: React.FC = () => {
           hasApiKey={Boolean(state.apiKey && state.apiKey.trim())}
         />
       ) : (
-        <div className="flex-1 flex flex-col">
+        <div className="flex-1 flex flex-col relative overflow-hidden">
+          {/* Extended Full-Page Ocean Background with Animated Swimming Fish, Crabs, Waves, Bubbles */}
+          <OceanBackground />
+
           {/* Persistent In-Game HUD */}
-          <Hud
-            roundNumber={state.roundNumber}
-            planks={state.planks}
-            lives={state.lives}
-            honestMode={state.honestMode}
-            onToggleHonest={() => dispatch({ type: 'TOGGLE_HONEST_MODE' })}
-            muted={state.muted}
-            onToggleMute={() => dispatch({ type: 'TOGGLE_MUTE' })}
-            onOpenSettings={() => setIsSettingsOpen(true)}
-            onRestart={() => dispatch({ type: 'RESTART_GAME' })}
-            onGoHome={() => dispatch({ type: 'GO_HOME' })}
-            isDemoMode={state.demoMode}
-          />
+          <div className="relative z-20">
+            <Hud
+              roundNumber={state.roundNumber}
+              planks={state.planks}
+              lives={state.lives}
+              honestMode={state.honestMode}
+              onToggleHonest={() => dispatch({ type: 'TOGGLE_HONEST_MODE' })}
+              muted={state.muted}
+              onToggleMute={() => dispatch({ type: 'TOGGLE_MUTE' })}
+              onOpenSettings={() => setIsSettingsOpen(true)}
+              onRestart={() => dispatch({ type: 'RESTART_GAME' })}
+              onGoHome={() => dispatch({ type: 'GO_HOME' })}
+              isDemoMode={state.demoMode}
+            />
+          </div>
 
           {/* Persistent In-Game Animated Bridge Scene */}
-          <BridgeScene
-            planks={state.planks}
-            persona={state.currentPersona}
-            isCollapsing={isCollapsing}
-            isWon={state.gameOutcome === 'WIN'}
-            collapsedPlankIndex={collapsedPlankIndex}
-          />
+          <div className="relative z-20">
+            <BridgeScene
+              planks={state.planks}
+              persona={state.currentPersona}
+              isCollapsing={isCollapsing}
+              isWon={state.gameOutcome === 'WIN'}
+              isLost={state.gameOutcome === 'LOSE'}
+              collapsedPlankIndex={collapsedPlankIndex}
+            />
+          </div>
 
           {/* Active Screen Body */}
-          <main className="flex-1 flex flex-col justify-center">
+          <main className="flex-1 flex flex-col justify-center relative z-20">
             {state.screen === 'COVER_A' && (
               <CoverAScreen
                 roundNumber={state.roundNumber}
