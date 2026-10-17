@@ -61,8 +61,9 @@ function pickRandomConstraint(): Constraint {
   return CONSTRAINTS[Math.floor(Math.random() * CONSTRAINTS.length)];
 }
 
-const envApiKey = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_GEMINI_API_KEY) || '';
-const storedApiKey = getStoredString('gap_jumpers_gemini_key', envApiKey);
+const envApiKey = ((typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_GEMINI_API_KEY) || '').trim();
+const rawStoredKey = getStoredString('gap_jumpers_gemini_key', '').trim();
+const activeApiKey = rawStoredKey || envApiKey;
 
 export const initialGameState: GameState = {
   screen: 'HOME',
@@ -70,9 +71,9 @@ export const initialGameState: GameState = {
   planks: [],
   lives: 2,
   honestMode: getStoredBool('gap_jumpers_honest', false),
-  demoMode: getStoredBool('gap_jumpers_demo_mode', !storedApiKey),
+  demoMode: getStoredBool('gap_jumpers_demo_mode', !activeApiKey),
   muted: getStoredBool('gap_jumpers_muted', false),
-  apiKey: storedApiKey,
+  apiKey: activeApiKey,
   
   currentScenario: null,
   scenarioRerolled: false,

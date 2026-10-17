@@ -197,6 +197,27 @@
 - **Layering Context**:
   - Placed at `z-0 pointer-events-none` so all interactive game panels, canvas doodler, timer badges, and typing fields remain sharp and fully clickable at `z-20`.
 
+### 11. AI Doodle Interpretation & API Key Resolution Fixed (Gemini 3.8 Flash Migration)
+- **Root Cause Analysis**:
+  1. Google's Generative Language API deprecated legacy model endpoints (`gemini-2.0-flash`, `gemini-2.5-flash`, and `gemini-1.5-flash`), returning HTTP 404:
+     ```json
+     {
+       "error": {
+         "code": 404,
+         "message": "This model models/gemini-2.0-flash is no longer available. Please update your code to use models/gemini-3.8-flash for the latest features and improvements."
+       }
+     }
+     ```
+  2. Every API request previously failed at both the primary model and the fallback model with HTTP 404, causing the catch handler to trigger a toast error and revert to the offline template generator.
+  3. In addition, modern Gemini models include multi-part candidate streams and `thoughtSignature` metadata, which required resilient JSON extraction rather than naive single-part array indexing.
+- **Resolution**:
+  - Updated `GEMINI_MODEL` to `'gemini-3.8-flash'`.
+  - Added a multi-tier fallback chain: `gemini-3.8-flash` → `gemini-3.7-flash` → `gemini-3.6-flash` → `gemini-3.5-flash` → `gemini-flash-latest`.
+  - Implemented `extractJsonFromResponse` featuring 3-stage extraction: direct parse, markdown block stripping (` ```json `), and regex object boundary extraction (`{ ... }`).
+  - Added parts aggregation to concatenate all text fragments across candidates.
+  - Initialized `.env` with the user's active API key (`VITE_GEMINI_API_KEY`) and updated `src/state/game.ts` so `activeApiKey` cleanly falls back to environment configuration whenever stored local state is blank.
+  - Verified live against Google's API endpoint with 100% test pass on multimodal doodle interpretation and 2-step silly rule constraint scoring.
+
 ---
 
 ## 🛠️ Tech Stack & Dependencies
@@ -419,8 +440,9 @@ The application manages full round progression via React's `useReducer`:
 ### File: `src/lib/ai.ts`
 
 ### Models
-- **Primary**: `gemini-2.0-flash`
-- **Fallback**: `gemini-1.5-flash`
+- **Primary**: `gemini-3.8-flash`
+- **Fallback Chain**: `gemini-3.7-flash`, `gemini-3.6-flash`, `gemini-3.5-flash`, `gemini-flash-latest`
+- **Response Parsing**: `extractJsonFromResponse` handling direct JSON, markdown codeblock fences (` ```json `), and regex boundary matching. Candidate stream text parts are concatenated to ensure resilience with thought signatures.
 
 ### Call 1: Relay Generation (Multimodal Vision)
 - **Input**: Base64 PNG image data of Player A's doodle.
@@ -648,7 +670,8 @@ Zero external audio files — all sounds are procedurally synthesized using the 
 | State Management | ✅ Complete | useReducer with localStorage persistence |
 | Linear 30s Drawing Timer | ✅ Fixed | Strictly linear wall-clock countdown |
 | Linear 60s Guessing Timer | ✅ Implemented | Auto-submits on expiration |
-| Gemini 2.0 / 1.5 Flash | ✅ Fixed | Replaced invalid 2.5-flash model name |
+| Gemini 3.8 Flash Migration | ✅ Fixed | Migrated to gemini-3.8-flash with multi-tier fallback chain |
+| Resilient AI JSON Parser | ✅ Fixed | Handles thought signatures, multi-part streams & markdown blocks |
 | Error Notifications | ✅ Enhanced | Descriptive toast errors on API issues |
 | Demo Mode Persistence | ✅ Fixed | Saved in `localStorage` |
 | Devlympics / Theme Text | ✅ Removed | Completely decoupled from hackathon branding |

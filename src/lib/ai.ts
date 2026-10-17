@@ -1,8 +1,14 @@
 import type { Persona, Scenario, Constraint } from '../types/game';
 import { FALLBACK_COMMENTS } from '../data/content';
 
-export const GEMINI_MODEL = 'gemini-2.0-flash';
-export const GEMINI_FALLBACK_MODEL = 'gemini-1.5-flash';
+export const GEMINI_MODEL = 'gemini-3.8-flash';
+export const GEMINI_FALLBACK_MODELS = [
+  'gemini-3.8-flash',
+  'gemini-3.7-flash',
+  'gemini-3.6-flash',
+  'gemini-3.5-flash',
+  'gemini-flash-latest',
+];
 
 export interface RelayResponse {
   relay: string;
@@ -207,11 +213,40 @@ function extractBase64Data(dataUrl: string): { data: string; mimeType: string } 
   return { mimeType: 'image/png', data: dataUrl };
 }
 
+// Robust JSON extractor handling raw strings, markdown codeblocks, and thought signatures
+export function extractJsonFromResponse<T = any>(rawText: string): T {
+  const trimmed = rawText.trim();
+  try {
+    return JSON.parse(trimmed);
+  } catch {}
+
+  const codeBlockMatch = trimmed.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
+  if (codeBlockMatch && codeBlockMatch[1]) {
+    try {
+      return JSON.parse(codeBlockMatch[1].trim());
+    } catch {}
+  }
+
+  const firstBrace = trimmed.indexOf('{');
+  const lastBrace = trimmed.lastIndexOf('}');
+  if (firstBrace !== -1 && lastBrace > firstBrace) {
+    const candidate = trimmed.slice(firstBrace, lastBrace + 1);
+    try {
+      return JSON.parse(candidate);
+    } catch {}
+  }
+
+  throw new Error(`Unable to parse valid JSON from AI response: ${rawText.slice(0, 100)}...`);
+}
+
 // Helper to extract clean error message
 export function formatGeminiError(err: any): string {
   const msg = err?.message || String(err || '');
-  if (msg.includes('API_KEY_INVALID') || msg.includes('400')) {
+  if (msg.includes('API_KEY_INVALID')) {
     return 'Invalid Gemini API key. Please check Settings.';
+  }
+  if (msg.includes('400')) {
+    return 'Gemini API request error (400). Please check your API key.';
   }
   if (msg.includes('429') || msg.includes('RESOURCE_EXHAUSTED')) {
     return 'Gemini API quota exhausted. Using offline interpreter.';
@@ -222,13 +257,13 @@ export function formatGeminiError(err: any): string {
   return 'AI error encountered, using backup interpreter.';
 }
 
-// Generic Gemini caller with model fallback
+// Generic Gemini caller with model fallback chain
 async function callGeminiApi(apiKey: string, body: unknown): Promise<any> {
-  const models = [GEMINI_MODEL, GEMINI_FALLBACK_MODEL];
+  const cleanKey = apiKey.trim();
   let lastError: any = null;
 
-  for (const model of models) {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`;
+  for (const model of GEMINI_FALLBACK_MODELS) {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(cleanKey)}`;
     try {
       const response = await fetch(url, {
         method: 'POST',
@@ -238,22 +273,29 @@ async function callGeminiApi(apiKey: string, body: unknown): Promise<any> {
 
       if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(`Gemini HTTP ${response.status}: ${errorText}`);
+        throw new Error(`Gemini HTTP ${response.status} (${model}): ${errorText}`);
       }
 
       const data = await response.json();
-      const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-      if (!rawText) {
-        throw new Error('Empty response from Gemini API');
+      const parts = data?.candidates?.[0]?.content?.parts || [];
+      const textParts = parts
+        .map((p: any) => (typeof p?.text === 'string' ? p.text : ''))
+        .filter(Boolean);
+
+      if (textParts.length === 0) {
+        throw new Error(`Empty response from Gemini API (${model})`);
       }
 
-      // Parse JSON from text (handling potential markdown backticks)
-      const cleanJson = rawText.replace(/```json/gi, '').replace(/```/g, '').trim();
-      return JSON.parse(cleanJson);
-    } catch (err) {
+      const combinedText = textParts.join('\n');
+      return extractJsonFromResponse(combinedText);
+    } catch (err: any) {
       lastError = err;
+      const msg = String(err?.message || '');
+      if (msg.includes('API_KEY_INVALID') || msg.includes('400')) {
+        break;
+      }
       // Brief pause before trying fallback model
-      await new Promise(r => setTimeout(r, 400));
+      await new Promise(r => setTimeout(r, 200));
     }
   }
 
